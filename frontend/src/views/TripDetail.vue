@@ -29,52 +29,124 @@
           <h1 class="trip-title">{{ trip.title }}</h1>
           
           <div class="trip-meta">
-            <span v-if="trip.author" class="author">
-              by {{ trip.author.displayName }}
+            <span v-if="trip.province" class="province-badge">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+              </svg>
+              {{ trip.province }}
             </span>
-            <span class="date">
-              {{ formatDate(trip.createdAt) }}
+            <span v-if="trip.duration" class="meta-item">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z" fill="currentColor"/>
+              </svg>
+              {{ trip.duration }}
+            </span>
+            <span v-if="trip.rating" class="meta-item rating">
+              <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+              {{ trip.rating }}
             </span>
           </div>
         </div>
         
-        <!-- Photo Gallery -->
-        <div class="photo-gallery" v-if="trip.photos && trip.photos.length > 0">
-          <div class="main-photo">
-            <img :src="currentPhoto" :alt="trip.title" @error="handleImageError" />
+        <!-- Two Column Layout -->
+        <div class="detail-layout">
+          <!-- Left Column: Photos and Description -->
+          <div class="detail-main">
+            <!-- Photo Gallery -->
+            <div class="photo-gallery" v-if="trip.photos && trip.photos.length > 0">
+              <div class="main-photo">
+                <img :src="currentPhoto" :alt="trip.title" @error="handleImageError" />
+              </div>
+              
+              <div v-if="trip.photos.length > 1" class="photo-thumbnails">
+                <img 
+                  v-for="(photo, index) in trip.photos"
+                  :key="index"
+                  :src="photo"
+                  :alt="`${trip.title} - Photo ${index + 1}`"
+                  :class="{ active: currentPhoto === photo }"
+                  @click="currentPhoto = photo"
+                  @error="handleImageError"
+                />
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="trip-tags" v-if="trip.tags && trip.tags.length > 0">
+              <span class="tag" v-for="tag in trip.tags" :key="tag">
+                {{ tag }}
+              </span>
+            </div>
+            
+            <!-- Description -->
+            <div class="trip-description">
+              <h2>About This Destination</h2>
+              <div class="description-content">{{ trip.description }}</div>
+            </div>
+
+            <!-- Additional Info -->
+            <div v-if="trip.location" class="address-section">
+              <h3>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                </svg>
+                Address
+              </h3>
+              <p>{{ trip.location }}</p>
+            </div>
           </div>
           
-          <div v-if="trip.photos.length > 1" class="photo-thumbnails">
-            <img 
-              v-for="(photo, index) in trip.photos"
-              :key="index"
-              :src="photo"
-              :alt="`${trip.title} - Photo ${index + 1}`"
-              :class="{ active: currentPhoto === photo }"
-              @click="currentPhoto = photo"
-              @error="handleImageError"
-            />
-          </div>
-        </div>
-        
-        <!-- Trip Info -->
-        <div class="trip-info">
-          <div class="trip-tags" v-if="trip.tags && trip.tags.length > 0">
-            <span class="tag" v-for="tag in trip.tags" :key="tag">
-              {{ tag }}
-            </span>
-          </div>
-          
-          <div class="trip-description">
-            <h3>About this trip</h3>
-            <div class="description-content" v-html="formatDescription(trip.description)"></div>
-          </div>
-          
-          <!-- Location Info -->
-          <div v-if="trip.latitude && trip.longitude" class="location-info">
-            <h3>Location</h3>
-            <p>Coordinates: {{ trip.latitude }}, {{ trip.longitude }}</p>
-            <!-- You could add a map component here -->
+          <!-- Right Column: Map -->
+          <div class="detail-sidebar">
+            <div class="map-section">
+              <h3>Location</h3>
+              
+              <!-- Map -->
+              <div v-if="hasCoordinates" class="map-container">
+                <iframe
+                  :src="googleMapEmbedUrl"
+                  width="100%"
+                  height="400"
+                  style="border:0;"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                ></iframe>
+                
+                <a 
+                  :href="googleMapLink" 
+                  target="_blank" 
+                  class="view-map-btn"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="currentColor"/>
+                    <circle cx="12" cy="9" r="2.5" fill="white"/>
+                  </svg>
+                  View on Google Maps
+                </a>
+                
+                <div class="coordinates">
+                  <small>Coordinates: {{ trip.latitude }}, {{ trip.longitude }}</small>
+                </div>
+              </div>
+              
+              <!-- No Map Placeholder -->
+              <div v-else class="map-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                </svg>
+                <p>Map information not available for this destination.</p>
+              </div>
+
+              <!-- Price Info -->
+              <div v-if="trip.price" class="price-info">
+                <h4>Estimated Cost</h4>
+                <p class="price">฿{{ formatPrice(trip.price) }}</p>
+                <small>Approximate cost per person</small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -99,6 +171,19 @@ export default {
       loading: true,
       error: null,
       currentPhoto: null
+    }
+  },
+  computed: {
+    hasCoordinates() {
+      return this.trip && this.trip.latitude && this.trip.longitude
+    },
+    googleMapEmbedUrl() {
+      if (!this.hasCoordinates) return ''
+      return `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${this.trip.latitude},${this.trip.longitude}&zoom=15`
+    },
+    googleMapLink() {
+      if (!this.hasCoordinates) return ''
+      return `https://www.google.com/maps?q=${this.trip.latitude},${this.trip.longitude}`
     }
   },
   async mounted() {
@@ -134,14 +219,8 @@ export default {
       })
     },
     
-    formatDescription(description) {
-      if (!description) return ''
-      // Convert line breaks to <br> tags and handle simple formatting
-      return description
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>')
-        .replace(/^/, '<p>')
-        .replace(/$/, '</p>')
+    formatPrice(price) {
+      return price.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
     },
     
     handleImageError(event) {
@@ -195,13 +274,68 @@ export default {
 
 .trip-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  color: #718096;
+  align-items: center;
+}
+
+.province-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: #e53e3e;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 500;
   font-size: 0.9rem;
 }
 
-.author {
-  font-weight: 500;
+.province-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.meta-item svg {
+  width: 18px;
+  height: 18px;
+  color: #718096;
+}
+
+.meta-item.rating {
+  color: #d69e2e;
+  font-weight: 600;
+}
+
+.meta-item.rating svg {
+  color: #d69e2e;
+  width: 20px;
+  height: 20px;
+}
+
+/* Two Column Layout */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.detail-main {
+  min-width: 0;
+}
+
+.detail-sidebar {
+  position: sticky;
+  top: 100px;
 }
 
 .photo-gallery {
@@ -265,31 +399,170 @@ export default {
   font-weight: 500;
 }
 
-.trip-description h3,
-.location-info h3 {
+.trip-description h2,
+.address-section h3,
+.map-section h3 {
   color: #2d3748;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1rem;
 }
 
-.description-content {
-  color: #4a5568;
-  line-height: 1.7;
-  font-size: 1.1rem;
+.trip-description {
+  margin-top: 2rem;
 }
 
-.description-content p {
+.description-content {
+  color: #4a5568;
+  line-height: 1.8;
+  font-size: 1.05rem;
+  white-space: pre-wrap;
+}
+
+.address-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  border-left: 4px solid #3182ce;
+}
+
+.address-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.address-section svg {
+  width: 20px;
+  height: 20px;
+  color: #3182ce;
+}
+
+.address-section p {
+  color: #2d3748;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Map Section */
+.map-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-section h3 {
+  font-size: 1.25rem;
   margin-bottom: 1rem;
 }
 
-.location-info {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e2e8f0;
+.map-container {
+  margin-bottom: 1rem;
+}
+
+.map-container iframe {
+  border-radius: 8px;
+  display: block;
+}
+
+.view-map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.875rem;
+  margin-top: 1rem;
+  background: #3182ce;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.view-map-btn:hover {
+  background: #2c5282;
+}
+
+.view-map-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.coordinates {
+  margin-top: 0.75rem;
+  text-align: center;
+  color: #718096;
+}
+
+.map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 2px dashed #cbd5e0;
+  text-align: center;
+}
+
+.map-placeholder svg {
+  width: 48px;
+  height: 48px;
+  color: #cbd5e0;
+  margin-bottom: 1rem;
+}
+
+.map-placeholder p {
+  color: #718096;
+  font-size: 0.95rem;
+}
+
+.price-info {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+}
+
+.price-info h4 {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.price-info .price {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.price-info small {
+  font-size: 0.85rem;
+  opacity: 0.8;
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .detail-sidebar {
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
   .trip-title {
     font-size: 2rem;
@@ -297,7 +570,8 @@ export default {
   
   .trip-meta {
     flex-direction: column;
-    gap: 0.5rem;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
   
   .main-photo {
@@ -307,6 +581,25 @@ export default {
   .photo-thumbnails img {
     width: 60px;
     height: 60px;
+  }
+  
+  .description-content {
+    font-size: 1rem;
+  }
+  
+  .map-container iframe {
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .trip-title {
+    font-size: 1.75rem;
+  }
+  
+  .province-badge,
+  .meta-item {
+    font-size: 0.85rem;
   }
 }
 </style>

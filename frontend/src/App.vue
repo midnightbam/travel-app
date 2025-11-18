@@ -4,15 +4,20 @@
       <div class="nav-brand">
         <router-link to="/">Travel Explorer</router-link>
       </div>
-      <div class="nav-menu">
+      <button class="mobile-menu-toggle" @click="toggleMobileMenu" v-if="isMobile">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="nav-menu" :class="{ 'mobile-open': mobileMenuOpen }">
         <template v-if="isAuthenticated">
-          <router-link to="/dashboard">Dashboard</router-link>
-          <router-link to="/trips">My Trips</router-link>
+          <router-link to="/dashboard" @click="closeMobileMenu">Dashboard</router-link>
+          <router-link to="/trips" @click="closeMobileMenu">My Trips</router-link>
           <button @click="logout" class="logout-btn">Logout</button>
         </template>
         <template v-else>
-          <router-link to="/login" class="nav-btn login-btn">Login</router-link>
-          <router-link to="/register" class="nav-btn register-btn">Register</router-link>
+          <router-link to="/login" class="nav-btn login-btn" @click="closeMobileMenu">Login</router-link>
+          <router-link to="/register" class="nav-btn register-btn" @click="closeMobileMenu">Register</router-link>
         </template>
       </div>
     </nav>
@@ -30,11 +35,18 @@ export default {
   name: 'App',
   data() {
     return {
-      isAuthenticated: false
+      isAuthenticated: false,
+      mobileMenuOpen: false,
+      isMobile: false
     }
   },
   mounted() {
     this.checkAuth()
+    this.checkMobile()
+    window.addEventListener('resize', this.checkMobile)
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile)
   },
   methods: {
     checkAuth() {
@@ -43,11 +55,25 @@ export default {
     logout() {
       authService.logout()
       this.isAuthenticated = false
+      this.closeMobileMenu()
+    },
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768
+      if (!this.isMobile) {
+        this.mobileMenuOpen = false
+      }
+    },
+    toggleMobileMenu() {
+      this.mobileMenuOpen = !this.mobileMenuOpen
+    },
+    closeMobileMenu() {
+      this.mobileMenuOpen = false
     }
   },
   watch: {
     $route() {
       this.checkAuth()
+      this.closeMobileMenu()
     }
   }
 }
@@ -306,23 +332,76 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.mobile-menu-toggle span {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: #2d3748;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .navbar {
     padding: 1rem;
+    position: relative;
   }
   
   .nav-brand a {
     font-size: 1.25rem;
   }
   
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
   .nav-menu {
-    gap: 0.5rem;
+    position: fixed;
+    top: 60px;
+    right: -100%;
+    width: 70%;
+    max-width: 300px;
+    height: calc(100vh - 60px);
+    background: white;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 2rem 1rem;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    gap: 1rem;
+  }
+  
+  .nav-menu.mobile-open {
+    right: 0;
+  }
+  
+  .nav-menu a,
+  .nav-menu button {
+    width: 100%;
+    text-align: left;
+    padding: 0.75rem 1rem !important;
+    border-radius: 6px;
   }
   
   .nav-btn {
-    padding: 0.375rem 0.75rem !important;
+    padding: 0.75rem 1rem !important;
     font-size: 0.875rem !important;
+  }
+  
+  .logout-btn {
+    width: 100%;
   }
   
   .container {
@@ -337,6 +416,17 @@ body {
   .form-container {
     margin: 1rem;
     padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-brand a {
+    font-size: 1.1rem;
+  }
+  
+  .trips-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 }
 </style>
