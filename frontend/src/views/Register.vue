@@ -44,6 +44,15 @@
             required
             placeholder="Create a strong password"
           />
+          <div class="password-requirements">
+            <p>Password must contain:</p>
+            <ul>
+              <li>At least 8 characters</li>
+              <li>At least one letter (a-z, A-Z)</li>
+              <li>At least one number (0-9)</li>
+              <li>At least one special character (!@#$%^&*)</li>
+            </ul>
+          </div>
         </div>
         
         <div class="form-group">
@@ -90,6 +99,30 @@ export default {
     }
   },
   methods: {
+    validatePassword(password) {
+      // Minimum 8 characters
+      if (password.length < 8) {
+        return 'Password must be at least 8 characters long'
+      }
+      
+      // Must contain at least one letter (a-z or A-Z)
+      if (!/[a-zA-Z]/.test(password)) {
+        return 'Password must contain at least one letter'
+      }
+      
+      // Must contain at least one number (0-9)
+      if (!/\d/.test(password)) {
+        return 'Password must contain at least one number'
+      }
+      
+      // Must contain at least one special character
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        return 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)'
+      }
+      
+      return null // Valid password
+    },
+
     async register() {
       this.error = null
       this.success = null
@@ -100,34 +133,52 @@ export default {
         return
       }
       
-      if (this.form.password.length < 6) {
-        this.error = 'Password must be at least 6 characters long'
+      // Enhanced password validation
+      const passwordError = this.validatePassword(this.form.password)
+      if (passwordError) {
+        this.error = passwordError
         return
       }
       
       this.loading = true
       
       try {
-        await authService.register({
+        // Register the user
+        const registerResponse = await authService.register({
           email: this.form.email,
           password: this.form.password,
           displayName: this.form.displayName
         })
         
-        this.success = 'Account created successfully! Please login to continue.'
-        
-        // Clear form
-        this.form = {
-          email: '',
-          displayName: '',
-          password: '',
-          confirmPassword: ''
+        // Auto-login after successful registration
+        try {
+          await authService.login({
+            email: this.form.email,
+            password: this.form.password
+          })
+          
+          this.success = 'Welcome! Account created and logged in successfully. Taking you home...'
+          
+          // Clear form
+          this.form = {
+            email: '',
+            displayName: '',
+            password: '',
+            confirmPassword: ''
+          }
+          
+          // Redirect to homepage after 1.5 seconds
+          setTimeout(() => {
+            this.$router.push('/')
+          }, 1500)
+          
+        } catch (loginError) {
+          // If auto-login fails, still show success but redirect to login
+          this.success = 'Account created successfully! Please login to continue.'
+          setTimeout(() => {
+            this.$router.push('/login')
+          }, 2000)
         }
-        
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          this.$router.push('/login')
-        }, 2000)
         
       } catch (error) {
         this.error = error.error || 'Registration failed. Please try again.'
@@ -191,5 +242,47 @@ h2 {
 
 .btn:disabled:hover {
   background: #a0aec0;
+}
+
+.btn-primary {
+  display: inline-block;
+  margin: 0 auto;
+  padding: 0.875rem 3rem;
+  border-radius: 12px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-group {
+  width: 100%;
+}
+
+.password-requirements {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.password-requirements p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.password-requirements ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #718096;
+}
+
+.password-requirements li {
+  margin-bottom: 0.25rem;
 }
 </style>
