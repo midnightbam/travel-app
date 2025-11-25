@@ -44,7 +44,7 @@ public class AuthController {
             // For demo: allow demo@example.com with password "password"
             if ("demo@example.com".equals(email) && "password".equals(password)) {
                 Map<String, Object> response = new HashMap<>();
-                response.put("token", "demo-jwt-token-" + System.currentTimeMillis());
+                response.put("token", "demo-jwt-token-1-" + System.currentTimeMillis());
                 response.put("user", Map.of(
                     "id", 1L,
                     "email", email,
@@ -52,11 +52,14 @@ public class AuthController {
                     "role", "USER"
                 ));
                 response.put("message", "Login successful");
+                response.put("success", true);
                 return ResponseEntity.ok(response);
             }
             
+            // User not found - return generic error for security
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid credentials");
+            error.put("success", false);
             return ResponseEntity.status(401).body(error);
         }
         
@@ -68,7 +71,8 @@ public class AuthController {
         
         if (passwordMatches) {
             Map<String, Object> response = new HashMap<>();
-            response.put("token", "jwt-token-" + System.currentTimeMillis());
+            // Token format: jwt-token-{userId}-{timestamp} for easy extraction
+            response.put("token", "jwt-token-" + user.getId() + "-" + System.currentTimeMillis());
             response.put("user", Map.of(
                 "id", user.getId(),
                 "email", user.getEmail(),
@@ -76,10 +80,12 @@ public class AuthController {
                 "role", "USER"
             ));
             response.put("message", "Login successful");
+            response.put("success", true);
             return ResponseEntity.ok(response);
         } else {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid credentials");
+            error.put("success", false);
             return ResponseEntity.status(401).body(error);
         }
     }
@@ -139,5 +145,29 @@ public class AuthController {
         user.put("displayName", "Demo User");
         user.put("role", "USER");
         return ResponseEntity.ok(user);
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            // In production, you would:
+            // 1. Extract token from Authorization header
+            // 2. Add token to blacklist/revocation list
+            // 3. Invalidate refresh token if using refresh tokens
+            // 4. Clear any server-side session data
+            
+            // For demo purposes, just return success
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Logged out successfully");
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Logout failed");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(error);
+        }
     }
 }
