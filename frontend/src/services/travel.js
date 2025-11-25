@@ -34,5 +34,41 @@ export const travelService = {
     } catch (error) {
       throw error.response?.data || { error: 'Failed to search trips' };
     }
+  },
+
+  async getMyTrips() {
+    try {
+      const response = await api.get('/trips/mine');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to fetch your trips' };
+    }
+  },
+
+  async createTrip(tripData) {
+    try {
+      const response = await api.post('/trips', tripData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to create trip' };
+    }
+  },
+
+  async updateTrip(id, tripData) {
+    try {
+      const response = await api.put(`/trips/${id}`, tripData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to update trip' };
+    }
+  },
+
+  async deleteTrip(id) {
+    try {
+      const response = await api.delete(`/trips/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to delete trip' };
+    }
   }
 };

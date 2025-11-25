@@ -35,6 +35,9 @@ public class Trip {
     @Column(name = "location")
     private String location;
     
+    @Column(name = "location_link", columnDefinition = "TEXT")
+    private String locationLink;
+    
     @Column
     private Double latitude;
     
