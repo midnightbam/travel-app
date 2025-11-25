@@ -12,7 +12,6 @@
       <div class="nav-menu" :class="{ 'mobile-open': mobileMenuOpen }">
         <template v-if="isAuthenticated">
           <router-link to="/dashboard" @click="closeMobileMenu">Dashboard</router-link>
-          <router-link to="/trips" @click="closeMobileMenu">My Trips</router-link>
           <button @click="logout" class="logout-btn">Logout</button>
         </template>
         <template v-else>

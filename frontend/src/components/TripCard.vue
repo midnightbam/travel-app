@@ -23,7 +23,18 @@
             {{ tag }}
           </span>
         </div>
-        <button class="view-detail-btn">View Detail</button>
+        <div class="action-buttons">
+          <button class="view-detail-btn">View Detail</button>
+          <button @click.stop="copyLink" class="copy-link-icon-btn" :class="{ copied: linkCopied }" :title="linkCopied ? 'Copied!' : 'Copy Link'">
+            <svg v-if="!linkCopied" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -36,6 +47,11 @@ export default {
     trip: {
       type: Object,
       required: true
+    }
+  },
+  data() {
+    return {
+      linkCopied: false
     }
   },
   computed: {
@@ -51,6 +67,28 @@ export default {
     handleImageError(event) {
       // Fallback to placeholder if image fails to load
       event.target.src = '/placeholder-image.jpg';
+    },
+    async copyLink() {
+      const url = `${window.location.origin}/trip/${this.trip.id}`
+      try {
+        await navigator.clipboard.writeText(url)
+        this.linkCopied = true
+        setTimeout(() => {
+          this.linkCopied = false
+        }, 2000)
+      } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = url
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        this.linkCopied = true
+        setTimeout(() => {
+          this.linkCopied = false
+        }, 2000)
+      }
     }
   }
 }
@@ -155,8 +193,14 @@ export default {
   border: 1px solid #e2e8f0;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .view-detail-btn {
-  width: 100%;
+  flex: 1;
   background: #3182ce;
   color: white;
   border: none;
@@ -169,6 +213,35 @@ export default {
 
 .view-detail-btn:hover {
   background: #2c5282;
+}
+
+.copy-link-icon-btn {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.copy-link-icon-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.copy-link-icon-btn.copied {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.copy-link-icon-btn svg {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 
 /* Responsive Design */

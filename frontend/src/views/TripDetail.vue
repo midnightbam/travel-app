@@ -108,7 +108,7 @@
                 <iframe
                   :src="googleMapEmbedUrl"
                   width="100%"
-                  height="400"
+                  height="280"
                   style="border:0;"
                   allowfullscreen=""
                   loading="lazy"
@@ -451,17 +451,18 @@ export default {
 .map-section {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .map-section h3 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
 }
 
 .map-container {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .map-container iframe {
@@ -475,14 +476,15 @@ export default {
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 0.875rem;
-  margin-top: 1rem;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
   background: #3182ce;
   color: white;
   text-decoration: none;
   border-radius: 8px;
   font-weight: 500;
   transition: background-color 0.3s;
+  font-size: 0.95rem;
 }
 
 .view-map-btn:hover {
@@ -490,14 +492,15 @@ export default {
 }
 
 .view-map-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .coordinates {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   text-align: center;
   color: #718096;
+  font-size: 0.85rem;
 }
 
 .map-placeholder {
@@ -505,7 +508,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
   background: #f7fafc;
   border-radius: 8px;
   border: 2px dashed #cbd5e0;
@@ -513,20 +516,20 @@ export default {
 }
 
 .map-placeholder svg {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   color: #cbd5e0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .map-placeholder p {
   color: #718096;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .price-info {
-  margin-top: 1.5rem;
-  padding: 1.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 8px;
   color: white;
@@ -534,20 +537,20 @@ export default {
 }
 
 .price-info h4 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   opacity: 0.9;
 }
 
 .price-info .price {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
 .price-info small {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   opacity: 0.8;
 }
 
