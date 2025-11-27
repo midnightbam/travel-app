@@ -1,13 +1,5 @@
 <template>
   <div class="home">
-    <!-- Hero Section -->
-    <div class="hero-section">
-      <div class="hero-content">
-        <h1>Discover Amazing Travel Experiences</h1>
-        <p>Explore the most beautiful destinations and hidden gems from around the world</p>
-      </div>
-    </div>
-
     <!-- Search Section -->
     <div class="container">
       <SearchBar @search="handleSearch" />
@@ -174,28 +166,6 @@ export default {
 </script>
 
 <style scoped>
-.hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-align: center;
-  padding: 4rem 2rem;
-  margin-bottom: 3rem;
-}
-
-.hero-content h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  line-height: 1.2;
-}
-
-.hero-content p {
-  font-size: 1.25rem;
-  opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
 .search-info {
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -282,32 +252,9 @@ export default {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .hero-section {
-    padding: 3rem 1rem;
-    margin-bottom: 2rem;
-  }
-  
-  .hero-content h1 {
-    font-size: 2rem;
-  }
-  
-  .hero-content p {
-    font-size: 1.1rem;
-  }
-  
   .btn-view-more {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-content h1 {
-    font-size: 1.75rem;
-  }
-  
-  .hero-content p {
-    font-size: 1rem;
   }
 }
 </style>
