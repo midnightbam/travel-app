@@ -81,18 +81,18 @@
                     <small>Supports: JPG, PNG, GIF (max 8 photos)</small>
                   </div>
                   
-                  <div v-if="photoList.length > 0" class="photo-preview-grid">
+                  <div v-if="validPhotoList.length > 0" class="photo-preview-grid">
                     <div 
-                      v-for="(photo, index) in photoList" 
-                      :key="index"
+                      v-for="(photo, index) in validPhotoList" 
+                      :key="photo.url || index"
                       class="photo-preview-item"
-                      :class="{ 'main-photo': index === mainPhotoIndex }"
-                      @dragstart="handleDragStart(index)"
-                      @dragover.prevent
-                      @drop.prevent="handleDragEnd(index)"
-                      draggable="true"
-                    >
-                      <img :src="photo.url" :alt="`Photo ${index + 1}`" @error="handleImageError" />
+                        :class="{ 'main-photo': index === mainPhotoIndex }"
+                        @dragstart="handleDragStart(index)"
+                        @dragover.prevent
+                        @drop.prevent="handleDragEnd(index)"
+                        draggable="true"
+                      >
+                        <img :src="photo.url" :alt="`Photo ${index + 1}`" @error="handleImageError" />
                       <div class="photo-controls">
                         <button type="button" @click="setMainPhoto(index)" class="main-photo-btn" :class="{ active: index === mainPhotoIndex }">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -238,6 +238,16 @@ export default {
              this.formData.province &&
              this.formData.description &&
              this.photoList.length >= 2
+    },
+    validPhotoList() {
+      const valid = this.photoList.filter(photo => 
+        photo && 
+        photo.url && 
+        typeof photo.url === 'string' && 
+        photo.url.trim().length > 0
+      )
+      console.log('validPhotoList:', valid.length, 'photos out of', this.photoList.length)
+      return valid
     }
   },
   async created() {
@@ -292,15 +302,33 @@ export default {
         console.log('Debug - tagsText:', this.tagsText)
         
         // Handle photos - convert from backend format if needed
-        if (tripData.photos && Array.isArray(tripData.photos)) {
-          this.photoList = tripData.photos.map((photo, index) => ({
-            url: photo,
+        this.photoList = []
+        if (tripData.photos) {
+          let photoUrls = []
+          
+          // Handle if photos is a string (comma-separated URLs)
+          if (typeof tripData.photos === 'string') {
+            photoUrls = tripData.photos.split(',')
+              .map(url => url.trim())
+              .filter(url => url.length > 0 && url !== '' && url !== 'null' && url !== 'undefined')
+          } 
+          // Handle if photos is already an array
+          else if (Array.isArray(tripData.photos)) {
+            photoUrls = tripData.photos.filter(url => url && typeof url === 'string' && url.trim().length > 0)
+          }
+          
+          // Create photo objects only for valid URLs
+          this.photoList = photoUrls.map((url, index) => ({
+            url: url,
             name: `Photo ${index + 1}`,
             file: null // Existing photos don't have file objects
           }))
-        } else {
-          this.photoList = []
+          
+          console.log('Parsed photo URLs:', photoUrls)
         }
+        
+        console.log('Loaded photoList:', this.photoList)
+        console.log('PhotoList length:', this.photoList.length)
         
         this.mainPhotoIndex = 0 // Default to first photo
         
@@ -927,8 +955,8 @@ export default {
 }
 
 .photo-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -940,6 +968,8 @@ export default {
   border: 2px solid #e2e8f0;
   transition: all 0.2s ease;
   cursor: grab;
+  width: 150px;
+  flex-shrink: 0;
 }
 
 .photo-preview-item:hover {
@@ -954,8 +984,8 @@ export default {
 }
 
 .photo-preview-item img {
-  width: 100%;
-  height: 100px;
+  width: 150px;
+  height: 150px;
   object-fit: cover;
   display: block;
 }
