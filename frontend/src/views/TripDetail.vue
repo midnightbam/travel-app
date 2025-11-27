@@ -175,7 +175,11 @@ export default {
   },
   computed: {
     hasCoordinates() {
-      return this.trip && this.trip.latitude && this.trip.longitude
+      return this.trip && 
+             this.trip.latitude != null && 
+             this.trip.longitude != null &&
+             !isNaN(this.trip.latitude) && 
+             !isNaN(this.trip.longitude)
     },
     googleMapEmbedUrl() {
       if (!this.hasCoordinates) return ''

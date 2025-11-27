@@ -7,7 +7,7 @@
           <h1>My Trips Dashboard</h1>
           <p>Manage all your travel destinations</p>
         </div>
-        <button @click="showCreateModal = true" class="btn btn-primary">
+        <button @click="$router.push('/destination/add')" class="btn btn-primary">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
@@ -49,7 +49,7 @@
         </svg>
         <h3>You haven't added any trips yet</h3>
         <p>Start sharing your travel experiences by adding your first destination!</p>
-        <button @click="showCreateModal = true" class="btn btn-primary">Add Your First Trip</button>
+        <button @click="$router.push('/destination/add')" class="btn btn-primary">Add Your First Trip</button>
       </div>
 
       <!-- Trips Table (Desktop) -->
@@ -65,7 +65,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="trip in trips" :key="trip.id">
+            <tr v-for="trip in paginatedTrips" :key="trip.id">
               <td>
                 <img :src="trip.coverImage" :alt="trip.title" class="trip-thumbnail" @error="handleImageError" />
               </td>
@@ -81,7 +81,7 @@
               <td class="date-cell">{{ formatDate(trip.updatedAt || trip.createdAt) }}</td>
               <td>
                 <div class="action-buttons" v-if="canEdit(trip)">
-                  <button @click="editTrip(trip)" class="btn-icon btn-edit" title="Edit">
+                  <button @click="$router.push(`/destination/edit/${trip.id}`)" class="btn-icon btn-edit" title="Edit">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -100,7 +100,7 @@
 
         <!-- Mobile Cards -->
         <div class="trips-cards">
-          <div v-for="trip in trips" :key="trip.id" class="trip-card-mobile">
+          <div v-for="trip in paginatedTrips" :key="trip.id" class="trip-card-mobile">
             <img :src="trip.coverImage" :alt="trip.title" class="trip-thumbnail-mobile" @error="handleImageError" />
             <div class="trip-card-content">
               <router-link :to="`/trip/${trip.id}`" class="trip-title-link">
@@ -111,7 +111,7 @@
                 <span class="date-text">{{ formatDate(trip.updatedAt || trip.createdAt) }}</span>
               </div>
               <div class="action-buttons" v-if="canEdit(trip)">
-                <button @click="editTrip(trip)" class="btn btn-secondary">Edit</button>
+                <button @click="$router.push(`/destination/edit/${trip.id}`)" class="btn btn-secondary">Edit</button>
                 <button @click="confirmDelete(trip)" class="btn btn-danger">Delete</button>
               </div>
               <div v-else class="view-only-badge">
@@ -119,6 +119,43 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- Pagination and Trip Count -->
+      <div v-if="trips.length > 0" class="pagination-wrapper">
+        <div class="trips-count-bottom">
+          <p>Showing {{ paginatedTrips.length }} of {{ trips.length }} trips</p>
+        </div>
+        <div v-if="showPagination" class="pagination">
+        <button 
+          @click="currentPage--" 
+          :disabled="currentPage === 1"
+          class="pagination-btn pagination-arrow"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        
+        <button 
+          v-for="page in visiblePages" 
+          :key="page"
+          @click="currentPage = page"
+          :class="['pagination-btn', 'pagination-number', { active: currentPage === page }]"
+        >
+          {{ page }}
+        </button>
+        
+        <button 
+          @click="currentPage++" 
+          :disabled="currentPage === totalPages"
+          class="pagination-btn pagination-arrow"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         </div>
       </div>
     </div>
@@ -156,10 +193,91 @@
             <input v-model="formData.rating" type="number" min="1" max="5" step="0.1" placeholder="e.g., 4.5" />
           </div>
 
-          <div class="form-group">
-            <label>Location Link (Google Maps or other)</label>
-            <input v-model="formData.locationLink" type="url" placeholder="https://maps.google.com/?q=..." />
-            <small class="form-help">Paste a Google Maps link or embed URL</small>
+          <!-- Enhanced Location Section -->
+          <div class="form-group location-section">
+            <label>Location *</label>
+            <div class="location-input-options">
+              <div class="location-tabs">
+                <button 
+                  type="button" 
+                  @click="locationInputType = 'map'" 
+                  :class="['location-tab', { active: locationInputType === 'map' }]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                  Select on Map
+                </button>
+                <button 
+                  type="button" 
+                  @click="locationInputType = 'manual'" 
+                  :class="['location-tab', { active: locationInputType === 'manual' }]"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H6.99C5.28 7 4 8.28 4 10s1.28 3 2.99 3H11v2H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                  </svg>
+                  Add Link
+                </button>
+              </div>
+              
+              <!-- Map Selection -->
+              <div v-if="locationInputType === 'map'" class="map-container">
+                <div class="map-placeholder" @click="showMapModal = true">
+                  <div v-if="!selectedLocation" class="map-prompt">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    <p>Click to open map and select location</p>
+                  </div>
+                  <div v-else class="selected-location-info">
+                    <div class="location-preview">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <div>
+                        <p class="coordinates">{{ selectedLocation.lat.toFixed(6) }}, {{ selectedLocation.lng.toFixed(6) }}</p>
+                        <p class="address">{{ selectedLocation.address || 'Click to change location' }}</p>
+                      </div>
+                    </div>
+                    <button type="button" @click.stop="clearLocation" class="clear-location-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Manual Link Input -->
+              <div v-if="locationInputType === 'manual'" class="manual-input-container">
+                <div class="input-group">
+                  <input 
+                    v-model="formData.locationLink" 
+                    type="url" 
+                    placeholder="https://maps.google.com/... or other map link"
+                    class="location-link-input"
+                  />
+                  <button type="button" @click="parseLocationLink" class="parse-link-btn" :disabled="!formData.locationLink">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+                    </svg>
+                    Parse
+                  </button>
+                </div>
+                <p class="input-help">Paste a Google Maps, Apple Maps, or other location link</p>
+              </div>
+              
+              <!-- Current Location Display -->
+              <div v-if="currentLocationData" class="current-location-display">
+                <div class="location-summary">
+                  <strong>Selected Location:</strong>
+                  <p>Latitude: {{ currentLocationData.latitude }}</p>
+                  <p>Longitude: {{ currentLocationData.longitude }}</p>
+                  <p v-if="currentLocationData.address">Address: {{ currentLocationData.address }}</p>
+                  <p v-if="currentLocationData.link">Link: <a :href="currentLocationData.link" target="_blank">{{ currentLocationData.link }}</a></p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -243,14 +361,40 @@
       </div>
     </div>
   </div>
+
+  <!-- Map Selector Modal -->
+  <div v-if="showMapModal" class="modal-overlay" @click="showMapModal = false">
+    <div class="modal-content map-modal" @click.stop>
+      <div class="modal-header">
+        <h3>Select Location</h3>
+        <button @click="showMapModal = false" class="close-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <EmbeddedMapSelector @location-selected="onLocationSelected" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
 import { travelService } from '../services/travel.js'
-import { authService } from '../services/auth.js'
+import authService from '../services/auth.js'
+import { useNotification } from '../composables/useNotification.js'
+import EmbeddedMapSelector from '../components/EmbeddedMapSelector.vue'
 
 export default {
   name: 'Dashboard',
+  components: {
+    EmbeddedMapSelector
+  },
+  setup() {
+    const { showNotification } = useNotification()
+    return { showNotification }
+  },
   data() {
     return {
       trips: [],
@@ -265,17 +409,26 @@ export default {
       editingTrip: null,
       submitting: false,
       deleting: false,
+      currentPage: 1,
+      itemsPerPage: 10,
       formData: {
         title: '',
         location: '',
         description: '',
         rating: null,
-        locationLink: ''
+        locationLink: '',
+        latitude: null,
+        longitude: null,
+        isManualLink: false
       },
       photoList: [],
       mainPhotoIndex: 0,
       draggedIndex: null,
-      tagsText: ''
+      tagsText: '',
+      locationInputType: 'map',
+      selectedLocation: null,
+      showMapModal: false,
+      currentLocationData: null
     }
   },
   computed: {
@@ -287,10 +440,58 @@ export default {
         // Allow editing if no author (legacy trips) or user owns the trip
         return !trip.authorId || trip.authorId === this.currentUserId
       }
+    },
+    paginatedTrips() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      const end = start + this.itemsPerPage
+      return this.trips.slice(start, end)
+    },
+    totalPages() {
+      return Math.ceil(this.trips.length / this.itemsPerPage)
+    },
+    showPagination() {
+      const shouldShow = this.trips.length > this.itemsPerPage
+      console.log('Pagination debug:', {
+        tripsLength: this.trips.length,
+        itemsPerPage: this.itemsPerPage,
+        shouldShow: shouldShow,
+        totalPages: this.totalPages,
+        currentPage: this.currentPage
+      })
+      return shouldShow
+    },
+    visiblePages() {
+      const pages = []
+      const total = this.totalPages
+      const current = this.currentPage
+      
+      // Always show first page
+      pages.push(1)
+      
+      // Show pages around current page
+      for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+        pages.push(i)
+      }
+      
+      // Always show last page if more than 1 page
+      if (total > 1) {
+        pages.push(total)
+      }
+      
+      // Remove duplicates and sort
+      return [...new Set(pages)].sort((a, b) => a - b)
     }
   },
   async mounted() {
     await this.loadTrips()
+  },
+  async beforeRouteEnter(to, from, next) {
+    // Refresh data when entering dashboard
+    next(vm => {
+      if (from.path.includes('/destination/')) {
+        vm.loadTrips()
+      }
+    })
   },
   methods: {
     async loadTrips() {
@@ -535,6 +736,99 @@ export default {
 
     handleImageError(event) {
       event.target.src = '/placeholder-image.jpg'
+    },
+
+    // Location handling methods
+    clearLocation() {
+      this.selectedLocation = null
+      this.formData.latitude = null
+      this.formData.longitude = null
+      this.currentLocationData = null
+    },
+
+    onLocationSelected(location) {
+      this.selectedLocation = location
+      this.formData.latitude = location.lat
+      this.formData.longitude = location.lng
+      this.formData.location = location.address || `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+      this.formData.isManualLink = false
+      this.showMapModal = false
+      
+      this.currentLocationData = {
+        latitude: location.lat,
+        longitude: location.lng,
+        address: location.address
+      }
+      
+      this.showNotification('Location selected successfully!', 'success')
+    },
+
+    async parseLocationLink() {
+      if (!this.formData.locationLink) {
+        this.showNotification('Please enter a location link', 'warning')
+        return
+      }
+
+      try {
+        const link = this.formData.locationLink.trim()
+        let lat, lng
+
+        // Parse Google Maps links
+        if (link.includes('google.com/maps') || link.includes('maps.google.com')) {
+          // Different Google Maps formats
+          const patterns = [
+            /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,  // @lat,lng
+            /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,  // !3dlat!4dlng
+            /q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,  // q=lat,lng
+            /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/   // ll=lat,lng
+          ]
+          
+          for (const pattern of patterns) {
+            const match = link.match(pattern)
+            if (match) {
+              lat = parseFloat(match[1])
+              lng = parseFloat(match[2])
+              break
+            }
+          }
+        }
+        
+        // Parse Apple Maps links
+        else if (link.includes('maps.apple.com')) {
+          const match = link.match(/ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+          if (match) {
+            lat = parseFloat(match[1])
+            lng = parseFloat(match[2])
+          }
+        }
+        
+        // Parse direct coordinates
+        else if (link.match(/^-?\d+\.?\d*,-?\d+\.?\d*$/)) {
+          const coords = link.split(',')
+          lat = parseFloat(coords[0])
+          lng = parseFloat(coords[1])
+        }
+
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          this.formData.latitude = lat
+          this.formData.longitude = lng
+          this.formData.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+          this.formData.isManualLink = true
+          
+          this.currentLocationData = {
+            latitude: lat,
+            longitude: lng,
+            link: this.formData.locationLink
+          }
+          
+          this.showNotification('Location parsed successfully!', 'success')
+        } else {
+          throw new Error('Could not parse coordinates from link')
+        }
+      } catch (error) {
+        console.error('Error parsing location link:', error)
+        this.showNotification('Could not parse location from the provided link. Please check the URL format.', 'error')
+      }
     }
   }
 }
@@ -1174,6 +1468,362 @@ export default {
   .form-actions .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Location Section Styles */
+.location-section {
+  margin-bottom: 24px;
+}
+
+.location-input-options {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.location-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.location-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.location-tab:hover {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.location-tab.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-color: #10b981;
+}
+
+.map-container {
+  margin-top: 16px;
+}
+
+.map-placeholder {
+  border: 2px dashed #cbd5e0;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  background: white;
+}
+
+.map-placeholder:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.map-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #64748b;
+}
+
+.map-prompt svg {
+  opacity: 0.6;
+}
+
+.selected-location-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+}
+
+.location-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.location-preview svg {
+  color: #10b981;
+  margin-top: 2px;
+}
+
+.coordinates {
+  font-weight: 600;
+  color: #064e3b;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.address {
+  color: #065f46;
+  margin: 0;
+  font-size: 13px;
+}
+
+.clear-location-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clear-location-btn:hover {
+  background: #dc2626;
+}
+
+.manual-input-container {
+  margin-top: 16px;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.location-link-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.location-link-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.parse-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.parse-link-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+
+.parse-link-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.input-help {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.current-location-display {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+}
+
+.location-summary {
+  color: #065f46;
+}
+
+.location-summary strong {
+  color: #064e3b;
+}
+
+.location-summary p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.location-summary a {
+  color: #10b981;
+  text-decoration: none;
+}
+
+.location-summary a:hover {
+  text-decoration: underline;
+}
+
+/* Map Modal Styles */
+.map-modal {
+  width: 90vw;
+  max-width: 800px;
+  height: 80vh;
+  max-height: 600px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.modal-body {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Pagination Wrapper */
+.pagination-wrapper {
+  margin-top: 24px;
+}
+
+.trips-count-bottom {
+  padding: 16px 0;
+  text-align: left;
+}
+
+.trips-count-bottom p {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 0;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0 12px;
+}
+
+.pagination-arrow {
+  min-width: 44px;
+  padding: 0;
+}
+
+.pagination-number {
+  min-width: 44px;
+}
+
+.pagination-btn:hover:not(:disabled):not(.active) {
+  background: #f8fafc;
+  border-color: #cbd5e0;
+  color: #1f2937;
+}
+
+.pagination-btn.active {
+  background: #ff6b35;
+  border-color: #ff6b35;
+  color: white;
+  font-weight: 600;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: white;
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+  .pagination {
+    gap: 6px;
+    padding: 16px;
+  }
+  
+  .pagination-btn {
+    min-width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  .pagination-arrow {
+    min-width: 40px;
+  }
+  
+  .pagination-number {
+    min-width: 40px;
   }
 }
 </style>

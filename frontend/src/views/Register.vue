@@ -81,10 +81,15 @@
 </template>
 
 <script>
-import { authService } from '../services/auth.js'
+import authService from '../services/auth.js'
+import { useNotification } from '../composables/useNotification.js'
 
 export default {
   name: 'Register',
+  setup() {
+    const { success, error: notifyError } = useNotification()
+    return { notifySuccess: success, notifyError }
+  },
   data() {
     return {
       form: {
@@ -157,7 +162,7 @@ export default {
             password: this.form.password
           })
           
-          this.success = 'Welcome! Account created and logged in successfully. Taking you home...'
+          this.notifySuccess('Welcome! Account created successfully')
           
           // Clear form
           this.form = {
@@ -174,7 +179,7 @@ export default {
           
         } catch (loginError) {
           // If auto-login fails, still show success but redirect to login
-          this.success = 'Account created successfully! Please login to continue.'
+          this.notifySuccess('Account created successfully! Please login to continue.')
           setTimeout(() => {
             this.$router.push('/login')
           }, 2000)

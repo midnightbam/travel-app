@@ -15,6 +15,8 @@ public class CorsConfig {
         
         // Allow specific origins for development and production
         configuration.addAllowedOrigin("http://localhost:5173"); // Vite dev server
+        configuration.addAllowedOrigin("http://localhost:5174"); // Alternative Vite port
+        configuration.addAllowedOrigin("http://localhost:5175"); // Alternative Vite port
         configuration.addAllowedOrigin("http://localhost:3000");  // Alternative dev port
         configuration.addAllowedOrigin("http://localhost:8080");  // Backend serving static
         configuration.addAllowedOriginPattern("https://*.vercel.app"); // All Vercel deployments

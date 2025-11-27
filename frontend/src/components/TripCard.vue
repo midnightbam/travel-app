@@ -25,13 +25,10 @@
         </div>
         <div class="action-buttons">
           <button class="view-detail-btn">View Detail</button>
-          <button @click.stop="copyLink" class="copy-link-icon-btn" :class="{ copied: linkCopied }" :title="linkCopied ? 'Copied!' : 'Copy Link'">
-            <svg v-if="!linkCopied" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <button @click.stop="copyLink" class="copy-link-icon-btn" title="Copy Link">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
         </div>
@@ -41,8 +38,14 @@
 </template>
 
 <script>
+import { useNotification } from '../composables/useNotification.js'
+
 export default {
   name: 'TripCard',
+  setup() {
+    const { success } = useNotification()
+    return { notifySuccess: success }
+  },
   props: {
     trip: {
       type: Object,
@@ -51,7 +54,6 @@ export default {
   },
   data() {
     return {
-      linkCopied: false
     }
   },
   computed: {
@@ -72,10 +74,7 @@ export default {
       const url = `${window.location.origin}/trip/${this.trip.id}`
       try {
         await navigator.clipboard.writeText(url)
-        this.linkCopied = true
-        setTimeout(() => {
-          this.linkCopied = false
-        }, 2000)
+        this.notifySuccess('Link copied to clipboard!')
       } catch (err) {
         // Fallback for older browsers
         const textArea = document.createElement('textarea')
@@ -84,10 +83,7 @@ export default {
         textArea.select()
         document.execCommand('copy')
         document.body.removeChild(textArea)
-        this.linkCopied = true
-        setTimeout(() => {
-          this.linkCopied = false
-        }, 2000)
+        this.notifySuccess('Link copied to clipboard!')
       }
     }
   }
@@ -232,10 +228,6 @@ export default {
 .copy-link-icon-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.copy-link-icon-btn.copied {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
 }
 
 .copy-link-icon-btn svg {

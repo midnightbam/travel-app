@@ -65,10 +65,15 @@
 </template>
 
 <script>
-import { authService } from '../services/auth.js'
+import authService from '../services/auth.js'
+import { useNotification } from '../composables/useNotification.js'
 
 export default {
   name: 'Login',
+  setup() {
+    const { success, error: notifyError } = useNotification()
+    return { notifySuccess: success, notifyError }
+  },
   data() {
     return {
       credentials: {
@@ -154,8 +159,8 @@ export default {
       try {
         const response = await authService.login(this.credentials)
         
-        // Show success message briefly
-        this.redirectMessage = response.message || 'Login successful!'
+        // Show success notification
+        this.notifySuccess('Welcome back! Login successful')
         
         // Clear form for security
         this.credentials = {
@@ -163,11 +168,11 @@ export default {
           password: ''
         }
         
-        // Redirect after brief delay to show success message
+        // Redirect after brief delay
         setTimeout(() => {
           const redirectTo = this.$route.query.redirect || '/dashboard'
           this.$router.push(redirectTo)
-        }, 500)
+        }, 1000)
         
       } catch (error) {
         // Handle specific error messages
