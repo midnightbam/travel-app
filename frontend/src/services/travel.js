@@ -70,5 +70,31 @@ export const travelService = {
     } catch (error) {
       throw error.response?.data || { error: 'Failed to delete trip' };
     }
+  },
+
+  async createTripWithFiles(formData) {
+    try {
+      const response = await api.post('/trips/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to create trip with files' };
+    }
+  },
+
+  async updateTripWithFiles(id, formData) {
+    try {
+      const response = await api.put(`/trips/${id}/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to update trip with files' };
+    }
   }
 };

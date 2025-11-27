@@ -1,6 +1,6 @@
 import api from './api.js';
 
-export const authService = {
+const authService = {
   async login(credentials) {
     try {
       const response = await api.post('/auth/login', credentials);
@@ -48,5 +48,43 @@ export const authService = {
   getUser() {
     const userInfo = localStorage.getItem('user_info');
     return userInfo ? JSON.parse(userInfo) : null;
+  },
+
+  setUser(userData) {
+    localStorage.setItem('user_info', JSON.stringify(userData));
+  },
+
+  async getProfile() {
+    try {
+      const response = await api.get('/auth/me');
+      return response;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to get profile' };
+    }
+  },
+
+  async updateProfile(profileData) {
+    try {
+      const response = await api.put('/auth/me', profileData);
+      
+      if (response.data) {
+        localStorage.setItem('user_info', JSON.stringify(response.data));
+      }
+      
+      return response;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to update profile' };
+    }
+  },
+
+  async changePassword(passwordData) {
+    try {
+      const response = await api.post('/auth/change-password', passwordData);
+      return response;
+    } catch (error) {
+      throw error.response?.data || { error: 'Failed to change password' };
+    }
   }
 };
+
+export default authService;
