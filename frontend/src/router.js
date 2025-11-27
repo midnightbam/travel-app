@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { authService } from './services/auth.js'
+import authService from './services/auth.js'
 import Home from './views/Home.vue'
 import Login from './views/Login.vue'
 import Register from './views/Register.vue'
 import Dashboard from './views/Dashboard.vue'
+import AddDestination from './views/AddDestination.vue'
 import TripDetail from './views/TripDetail.vue'
+import Profile from './views/Profile.vue'
 
 const routes = [
   {
@@ -26,6 +28,24 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/destination/add',
+    name: 'AddDestination',
+    component: AddDestination,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/destination/edit/:id',
+    name: 'EditDestination',
+    component: AddDestination,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
     meta: { requiresAuth: true }
   },
   {
