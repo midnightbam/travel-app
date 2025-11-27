@@ -35,6 +35,9 @@ public class Trip {
     @Column(name = "location")
     private String location;
     
+    @Column(name = "province")
+    private String province;
+    
     @Column(name = "location_link", columnDefinition = "TEXT")
     private String locationLink;
     
@@ -43,15 +46,6 @@ public class Trip {
     
     @Column
     private Double longitude;
-    
-    @Column(name = "duration")
-    private String duration;
-    
-    @Column
-    private Double price;
-    
-    @Column
-    private Double rating;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
@@ -71,8 +65,13 @@ public class Trip {
         return photoArray.length > 0 ? photoArray[0] : null;
     }
     
-    // Helper method to get province/region from tags
+    // Helper method to get province/region (now uses direct field)
     public String getProvince() {
+        if (province != null && !province.trim().isEmpty()) {
+            return province;
+        }
+        
+        // Fallback: try to extract from tags for legacy data
         String[] tagArray = parseArrayString(tags);
         if (tagArray.length == 0) return null;
         
