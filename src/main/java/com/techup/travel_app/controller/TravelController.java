@@ -39,8 +39,11 @@ public class TravelController {
             List<Trip> trips;
             
             if (query != null && !query.trim().isEmpty()) {
-                // Search functionality
-                trips = tripRepository.searchByTitleOrTags(query.trim());
+                // Search functionality with proper UTF-8 handling for Thai text
+                String decodedQuery = java.net.URLDecoder.decode(query.trim(), "UTF-8");
+                System.out.println("Search query: " + decodedQuery); // Debug log
+                trips = tripRepository.searchByTitleOrTags(decodedQuery);
+                System.out.println("Found " + trips.size() + " trips for query: " + decodedQuery); // Debug log
             } else {
                 // Get all trips
                 if (page == 0 && size == 10) {
