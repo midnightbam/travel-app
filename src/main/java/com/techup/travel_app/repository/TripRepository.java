@@ -19,12 +19,13 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     // Paginated trips
     Page<Trip> findAllByOrderByCreatedAtDesc(Pageable pageable);
     
-    // Search for PostgreSQL with string handling
+    // Search for PostgreSQL with Unicode and multilingual support
     @Query("SELECT t FROM Trip t WHERE " +
-           "LOWER(t.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(t.description) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(t.location) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(t.tags) LIKE LOWER(CONCAT('%', :query, '%'))")
+           "UPPER(t.title) LIKE UPPER(CONCAT('%', :query, '%')) OR " +
+           "UPPER(t.description) LIKE UPPER(CONCAT('%', :query, '%')) OR " +
+           "UPPER(t.location) LIKE UPPER(CONCAT('%', :query, '%')) OR " +
+           "UPPER(t.province) LIKE UPPER(CONCAT('%', :query, '%')) OR " +
+           "UPPER(t.tags) LIKE UPPER(CONCAT('%', :query, '%'))")
     List<Trip> searchByTitleOrTags(@Param("query") String query);
     
     // Find trips by author
