@@ -301,7 +301,7 @@ export default {
         closePasswordModal()
       } catch (err) {
         console.error('Failed to change password:', err)
-        notifyError(err.response?.data?.message || 'Failed to change password')
+        notifyError(err.error || err.message || 'Failed to change password')
       } finally {
         passwordLoading.value = false
       }
