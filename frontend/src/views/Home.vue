@@ -26,7 +26,7 @@
           Found {{ trips.length }} trip(s) for "<strong>{{ searchQuery }}</strong>"
         </p>
         <p v-else>
-          No trips found for "<strong>{{ searchQuery }}</strong>". Try a different keyword.
+          ไม่พบสถานที่ท่องเที่ยวสำหรับ "<strong>{{ searchQuery }}</strong>" | No trips found for "<strong>{{ searchQuery }}</strong>"
         </p>
       </div>
       
