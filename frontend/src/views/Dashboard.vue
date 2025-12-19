@@ -345,16 +345,34 @@
     <!-- Delete Confirmation Modal -->
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
       <div class="modal-content modal-small">
-        <div class="modal-header">
-          <h2>Confirm Delete</h2>
+        <div class="modal-header delete-modal-header">
+          <h2>Confirm Deletion</h2>
+          <button @click="showDeleteModal = false" class="modal-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body delete-modal-body">
+          <div class="warning-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+          </div>
           <p>Are you sure you want to delete "<strong>{{ tripToDelete?.title }}</strong>"?</p>
           <p class="warning-text">This action cannot be undone.</p>
         </div>
         <div class="form-actions">
-          <button @click="showDeleteModal = false" class="btn btn-secondary">Cancel</button>
+          <button @click="showDeleteModal = false" class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+            Cancel
+          </button>
           <button @click="deleteTrip" class="btn btn-danger" :disabled="deleting">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
             {{ deleting ? 'Deleting...' : 'Delete' }}
           </button>
         </div>
@@ -871,6 +889,9 @@ export default {
   cursor: pointer;
   transition: all 0.3s;
   text-decoration: none;
+  min-width: 100px;
+  justify-content: center;
+  font-size: 0.9rem;
 }
 
 .btn svg {
@@ -889,20 +910,24 @@ export default {
 
 .btn-secondary {
   background: #e2e8f0;
-  color: #2d3748;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
 }
 
 .btn-secondary:hover {
   background: #cbd5e0;
+  border-color: #cbd5e0;
 }
 
 .btn-danger {
-  background: #e53e3e;
+  background: #ef4444;
   color: white;
+  border: 1px solid #ef4444;
 }
 
-.btn-danger:hover {
-  background: #c53030;
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 /* Table Styles */
@@ -1059,15 +1084,39 @@ export default {
 }
 
 .modal-small {
-  max-width: 400px;
+  max-width: 450px;
+  min-width: 350px;
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 1.5rem;
+  padding: 2rem 2rem 1rem 2rem;
   border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.delete-modal-header {
+  background: #ef4444;
+  color: white;
+  padding: 1.5rem 2rem;
+  justify-content: space-between;
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+}
+
+.delete-modal-header h2 {
+  color: white;
+  margin: 0;
+}
+
+.delete-modal-header .modal-close {
+  color: white;
+}
+
+.delete-modal-header .modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .modal-header h2 {
@@ -1087,6 +1136,7 @@ export default {
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.3s;
+  color: #4a5568;
 }
 
 .modal-close:hover {
@@ -1100,13 +1150,38 @@ export default {
 }
 
 .modal-body {
-  padding: 1.5rem;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.delete-modal-body {
+  padding: 2.5rem 2rem;
+}
+
+.warning-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  color: #ef4444;
+}
+
+.modal-body p {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #4a5568;
+}
+
+.modal-body p:last-child {
+  margin-bottom: 0;
 }
 
 .warning-text {
   color: #e53e3e;
   font-size: 0.9rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem !important;
+  font-weight: 500;
 }
 
 /* Form Styles */
@@ -1151,9 +1226,9 @@ export default {
 .form-actions {
   display: flex;
   gap: 1rem;
-  justify-content: flex-end;
-  padding: 1.5rem;
-  border-top: 1px solid #e2e8f0;
+  justify-content: center;
+  padding: 1rem 2rem 2rem 2rem;
+  border-top: 1px solid #f7fafc;
 }
 
 /* Alerts */

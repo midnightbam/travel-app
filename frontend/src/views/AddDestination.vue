@@ -78,7 +78,7 @@
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     <p>Drag & drop images or click to browse</p>
-                    <small>Supports: JPG, PNG, GIF (max 8 photos)</small>
+                    <small>High quality: JPG, PNG, GIF (up to 10MB each, max 8 photos)</small>
                   </div>
                   
                   <div v-if="validPhotoList.length > 0" class="photo-preview-grid">
@@ -118,31 +118,8 @@
                 <h3>Location Selection</h3>
                 
                 <div class="location-input-options">
-                  <div class="location-tabs">
-                    <button 
-                      type="button" 
-                      @click="locationInputType = 'map'" 
-                      :class="['location-tab', { active: locationInputType === 'map' }]"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                      </svg>
-                      Interactive Map
-                    </button>
-                    <button 
-                      type="button" 
-                      @click="locationInputType = 'manual'" 
-                      :class="['location-tab', { active: locationInputType === 'manual' }]"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H6.99C5.28 7 4 8.28 4 10s1.28 3 2.99 3H11v2H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-                      </svg>
-                      Add Link
-                    </button>
-                  </div>
-                  
-                  <!-- Interactive Map -->
-                  <div v-if="locationInputType === 'map'" class="map-section">
+                  <!-- Interactive Map Only -->
+                  <div class="map-section">
                     <EmbeddedMapSelector 
                       @location-selected="onLocationSelected"
                       :initial-location="selectedLocationData ? {
@@ -151,25 +128,6 @@
                         address: selectedLocationData.address
                       } : null"
                     />
-                  </div>
-                  
-                  <!-- Manual Link Input -->
-                  <div v-if="locationInputType === 'manual'" class="manual-input-section">
-                    <div class="input-group">
-                      <input 
-                        v-model="formData.locationLink" 
-                        type="url" 
-                        placeholder="https://maps.google.com/... or other map link"
-                        class="location-link-input"
-                      />
-                      <button type="button" @click="parseLocationLink" class="parse-link-btn" :disabled="!formData.locationLink">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
-                        </svg>
-                        Parse
-                      </button>
-                    </div>
-                    <p class="input-help">Paste a Google Maps, Apple Maps, or other location link</p>
                   </div>
                 </div>
               </div>
@@ -214,14 +172,12 @@ export default {
       isEditing: false,
       tripId: null,
       submitting: false,
-      locationInputType: 'map',
       selectedLocationData: null,
       formData: {
         title: '',
         location: '',
         province: '',
         description: '',
-        locationLink: '',
         latitude: null,
         longitude: null,
         isManualLink: false
@@ -366,70 +322,6 @@ export default {
       this.showNotification('Location selected successfully!', 'success')
     },
 
-    async parseLocationLink() {
-      // Same parseLocationLink method from Dashboard
-      if (!this.formData.locationLink) {
-        this.showNotification('Please enter a location link', 'warning')
-        return
-      }
-
-      try {
-        const link = this.formData.locationLink.trim()
-        let lat, lng
-
-        // Parse Google Maps links
-        if (link.includes('google.com/maps') || link.includes('maps.google.com')) {
-          const patterns = [
-            /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-            /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
-            /q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-            /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/
-          ]
-          
-          for (const pattern of patterns) {
-            const match = link.match(pattern)
-            if (match) {
-              lat = parseFloat(match[1])
-              lng = parseFloat(match[2])
-              break
-            }
-          }
-        }
-        else if (link.includes('maps.apple.com')) {
-          const match = link.match(/ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-          if (match) {
-            lat = parseFloat(match[1])
-            lng = parseFloat(match[2])
-          }
-        }
-        else if (link.match(/^-?\d+\.?\d*,-?\d+\.?\d*$/)) {
-          const coords = link.split(',')
-          lat = parseFloat(coords[0])
-          lng = parseFloat(coords[1])
-        }
-
-        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-          this.formData.latitude = lat
-          this.formData.longitude = lng
-          this.formData.location = `${lat.toFixed(6)}, ${lng.toFixed(6)}`
-          this.formData.isManualLink = true
-          
-          this.selectedLocationData = {
-            latitude: lat,
-            longitude: lng,
-            link: this.formData.locationLink
-          }
-          
-          this.showNotification('Location parsed successfully!', 'success')
-        } else {
-          throw new Error('Could not parse coordinates from link')
-        }
-      } catch (error) {
-        console.error('Error parsing location link:', error)
-        this.showNotification('Could not parse location from the provided link. Please check the URL format.', 'error')
-      }
-    },
-
     triggerFileInput() {
       this.$refs.fileInput.click()
     },
@@ -449,16 +341,77 @@ export default {
       const remainingSlots = 8 - this.photoList.length
 
       imageFiles.slice(0, remainingSlots).forEach(file => {
-        const reader = new FileReader()
-        reader.onload = (e) => {
+        // Check file size - if it's very large, we might want to compress
+        const maxSizeInMB = 10 // Allow up to 10MB files
+        const maxSizeInBytes = maxSizeInMB * 1024 * 1024
+
+        if (file.size > maxSizeInBytes) {
+          this.showNotification(`Image "${file.name}" is too large. Maximum size is ${maxSizeInMB}MB.`, 'warning')
+          return
+        }
+
+        // For high quality, maintain original files when possible
+        if (file.size <= 5 * 1024 * 1024) { // 5MB or smaller - keep original with createObjectURL
+          const url = URL.createObjectURL(file)
           this.photoList.push({
             file: file,
-            url: e.target.result,
-            name: file.name
+            url: url,
+            name: file.name,
+            originalSize: file.size
+          })
+        } else {
+          // For very large files, compress with highest quality settings
+          this.compressImage(file, (compressedFile, dataUrl) => {
+            this.photoList.push({
+              file: compressedFile,
+              url: dataUrl,
+              name: file.name,
+              originalSize: file.size,
+              compressedSize: compressedFile.size
+            })
           })
         }
-        reader.readAsDataURL(file)
       })
+    },
+
+    compressImage(file, callback) {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+
+      img.onload = () => {
+        // Calculate dimensions - maintain aspect ratio with higher max dimension
+        const maxDimension = 2560 // Higher max for better quality
+        let { width, height } = img
+        
+        // Only resize if image is larger than max dimension
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width
+            width = maxDimension
+          } else {
+            width = (width * maxDimension) / height
+            height = maxDimension
+          }
+        }
+        // If image is already smaller, keep original dimensions
+
+        canvas.width = width
+        canvas.height = height
+
+        // Use highest quality settings
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high'
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Convert to blob with maximum quality (0.95 = 95% quality)
+        canvas.toBlob((blob) => {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95)
+          callback(blob, dataUrl)
+        }, 'image/jpeg', 0.95)
+      }
+
+      img.src = URL.createObjectURL(file)
     },
 
     removePhoto(index) {
@@ -745,39 +698,6 @@ export default {
   min-height: 0;
 }
 
-.location-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.location-tab {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  background: white;
-  color: #64748b;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-  justify-content: center;
-}
-
-.location-tab:hover {
-  border-color: #10b981;
-  color: #10b981;
-}
-
-.location-tab.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border-color: #10b981;
-}
-
 .map-section {
   flex: 1;
   border: 1px solid #e2e8f0;
@@ -988,6 +908,11 @@ export default {
   height: 150px;
   object-fit: cover;
   display: block;
+  /* High quality image rendering */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: high-quality;
 }
 
 .photo-controls {
@@ -1125,10 +1050,6 @@ export default {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-  }
-  
-  .location-tabs {
-    flex-direction: column;
   }
   
   .form-actions {

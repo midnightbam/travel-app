@@ -4,7 +4,7 @@
       <div class="nav-brand">
         <router-link to="/">Travel Explorer</router-link>
       </div>
-      <button class="mobile-menu-toggle" @click="toggleMobileMenu" v-if="isMobile">
+      <button class="mobile-menu-toggle" @click.stop="toggleMobileMenu" type="button">
         <span></span>
         <span></span>
         <span></span>
@@ -90,6 +90,11 @@ export default {
     
     // Listen for profile updates
     document.addEventListener('profile-updated', this.handleProfileUpdate)
+    
+    // Force initial mobile check
+    this.$nextTick(() => {
+      this.checkMobile()
+    })
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.checkMobile)
@@ -129,13 +134,23 @@ export default {
       this.closeDropdowns()
     },
     checkMobile() {
+      const wasMobile = this.isMobile
       this.isMobile = window.innerWidth <= 768
-      if (!this.isMobile) {
+      
+      // Close mobile menu when switching from mobile to desktop
+      if (wasMobile && !this.isMobile) {
         this.mobileMenuOpen = false
       }
+      
+      console.log('Mobile check:', this.isMobile, 'Window width:', window.innerWidth)
     },
     toggleMobileMenu() {
+      console.log('toggleMobileMenu called, current state:', this.mobileMenuOpen)
       this.mobileMenuOpen = !this.mobileMenuOpen
+      console.log('New state:', this.mobileMenuOpen)
+      
+      // Force DOM update
+      this.$forceUpdate()
     },
     closeMobileMenu() {
       this.mobileMenuOpen = false
@@ -199,6 +214,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  /* Ensure no pointer blocking */
+  pointer-events: auto;
 }
 
 .nav-brand a {
@@ -424,7 +441,7 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Mobile Menu Toggle */
+/* Mobile Menu Toggle - Hidden on desktop, shown on mobile */
 .mobile-menu-toggle {
   display: none;
   flex-direction: column;
@@ -433,6 +450,24 @@ body {
   border: none;
   cursor: pointer;
   padding: 0.5rem;
+  z-index: 1000;
+  position: relative;
+  /* Debug: Add visible background on mobile */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  /* Ensure clickable */
+  pointer-events: auto;
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+  align-items: center;
+  /* Enable touch events */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+}
+
+.mobile-menu-toggle:active {
+  background-color: #f0f0f0;
 }
 
 .mobile-menu-toggle span {
@@ -442,6 +477,7 @@ body {
   background: #2d3748;
   border-radius: 2px;
   transition: all 0.3s ease;
+  pointer-events: none;
 }
 
 /* Responsive Design */
@@ -449,16 +485,21 @@ body {
   .navbar {
     padding: 1rem;
     position: relative;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
   }
   
   .nav-brand a {
     font-size: 1.25rem;
   }
   
+  /* Show mobile menu toggle on mobile */
   .mobile-menu-toggle {
-    display: flex;
+    display: flex !important;
   }
   
+  /* Hide desktop nav menu items on mobile */
   .nav-menu {
     position: fixed;
     top: 60px;
@@ -473,6 +514,8 @@ body {
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     transition: right 0.3s ease;
     gap: 1rem;
+    z-index: 999;
+    overflow-y: auto;
   }
   
   .nav-menu.mobile-open {
